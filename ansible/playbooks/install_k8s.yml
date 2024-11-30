@@ -1,0 +1,17 @@
+---
+- name: Install k8s
+  hosts: all
+  become: true
+  gather_facts: false
+  #   container_count: 4
+  # vars:
+  #   default_container_name: docker
+  #   default_container_image: ubuntu
+  #   default_container_command: sleep 1
+
+  tasks:
+    - name: Install docker
+      ansible.builtin.import_role:
+        name: docker
+        tasks_from: install_docker
+      tags: docker

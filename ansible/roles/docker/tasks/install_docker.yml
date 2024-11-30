@@ -1,0 +1,68 @@
+---
+# Following https://docs.docker.com/engine/install/ubuntu/
+
+- name: Install docker
+  vars:
+    aws_cli_url: https://awscli.amazonaws.com/AWSCLIV2.pkg
+    aws_cli_tmp_path: /tmp/AWSCLIV2.pkg
+  block:
+    - name: Uninstall old versions
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-doc
+          - docker-compose
+          - docker-compose-v2
+          - podman-docker
+          - containerd
+          - runc
+        state: absent
+        purge: true
+
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create Docker keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download docker's GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    # Moved to an external script due to complexity with ansible syntax
+    - name: Add Docker repository to Apt sources
+      ansible.builtin.script:
+        cmd: files/add-to-apt-sources.sh
+
+    - name: Update apt package index after adding Docker repository
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install docker packages
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Add current user to the Docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
