@@ -1,0 +1,38 @@
+---
+- name: Install and configure containerd
+  vars:
+    containerd_config_path: /etc/containerd/config.toml
+  tags: containerd
+  block:
+    - name: Install containerd
+      ansible.builtin.apt:
+        name: containerd.io
+        state: present
+
+    - name: Create containerd directory
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+        owner: root
+        group: root
+        mode: "0644"
+        force: true
+
+    - name: Add containerd configuration
+      ansible.builtin.shell: /usr/bin/containerd config default > "{{ containerd_config_path }}"
+      args:
+        creates: "{{ containerd_config_path }}"
+      changed_when: false
+
+    - name: Configuring Systemd cgroup driver for containerd
+      ansible.builtin.lineinfile:
+        path: "{{ containerd_config_path }}"
+        regexp: "            SystemdCgroup = false"
+        line: "            SystemdCgroup = true"
+
+    - name: Enable and start containerd service
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+        enabled: true
+        daemon_reload: true

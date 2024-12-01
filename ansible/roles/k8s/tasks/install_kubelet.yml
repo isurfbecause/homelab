@@ -1,0 +1,18 @@
+---
+- name: Install and configure kubelet
+  tags: kubelet
+  block:
+    - name: Install kubelet
+      ansible.builtin.apt:
+        name: kubelet={{ k8s_defaults_version }}.*
+        state: present
+
+    - name: Install Kubeadm
+      ansible.builtin.apt:
+        name: kubeadm={{ k8s_defaults_version }}.*
+        state: present
+
+    - name: Enable the Kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        enabled: true
